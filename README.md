@@ -1,7 +1,7 @@
 # API-IF
 Creating an API of a Finance Institution Simulation
 
-For that API works, you need do two things before run:
+For run that API, you need do two things before:
 
 1. Install Express.js in vscode terminal, into the folder of the project, with the command: npm install express
 2. Create a file .env into your main folder of the project and add two lines into the file:
