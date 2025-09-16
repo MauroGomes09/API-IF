@@ -92,3 +92,29 @@ export const listTransaction = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const updateDataSharingConsent = async(req, res) => {
+  try{
+      const { customerId } = req.params;
+      const { consent } = req.body;
+
+      if (typeof consent !== 'boolean') {
+        return res.status(400).json({ message: 'Consent deve ser "true" ou "false"' });
+      }
+
+      const updatedCustomer = await Customer.findByIdAndUpdate(
+          customerId,
+        { consentData: consent},
+        { new: true }
+      );
+
+      if (!updatedCustomer) {
+        return res.status(404).json({ message: 'Usuário não encontrado!' })
+      }
+
+      res.status(200).json(updatedCustomer);
+
+  } catch (error) {
+      res.status(500).json({ message: "Erro ao atualizar consentimento do usuário!", error: error.message })
+  }
+}

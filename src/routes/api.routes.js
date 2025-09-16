@@ -7,6 +7,8 @@ router.post("/customers", controller.createCustomer);
 
 router.post("/customers/:customerId/accounts", controller.createAccount);
 
+router.patch("/customers/:customerId/consent", controller.updateDataSharingConsent);
+
 router.get("/accounts/:accountId/balance", controller.getBalance);
 
 router.get("/accounts/:accountId/transactions", controller.listTransaction);
