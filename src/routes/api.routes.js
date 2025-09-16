@@ -1,5 +1,4 @@
 import express from "express";
-import mongoose from "mongoose";
 import * as controller from "../controllers/api.controller.js";
 
 const router = express.Router();
