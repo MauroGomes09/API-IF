@@ -14,5 +14,5 @@ app.use('/api', apiRoutes);
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando e pronto na porta ${PORT}`);
+  console.log(`Servidor rodando e pronto na porta ${PORT}`);
 });
