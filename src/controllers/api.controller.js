@@ -2,6 +2,10 @@ import Customer from '../models/customer.model.js';
 import Account from '../models/account.model.js';
 import Transaction from '../models/transaction.model.js';
 
+export const checkStatus = async (req, res) => {
+  res.status(200).json({ status: "API is running" });  
+}
+
 export const createCustomer = async (req, res) => {
   try {
     const newCustomer = new Customer(req.body);
