@@ -3,8 +3,12 @@ import Account from '../models/account.model.js';
 import Transaction from '../models/transaction.model.js';
 
 export const checkStatus = async (req, res) => {
-  res.status(200).json({ status: "API is running" });  
-}
+  try { 
+    res.status(200).json({ status: "API is running" });  
+ }  catch (error){
+    res.status(400).json({ message: error.message });
+ }
+};
 
 export const createCustomer = async (req, res) => {
   try {
