@@ -94,7 +94,7 @@ export const createTransaction = async (req, res) => {
 
     const transactionData = {
       description,
-      amount: roundedAmount,
+      amount,
       type,
       category
     };
