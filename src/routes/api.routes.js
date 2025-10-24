@@ -7,7 +7,7 @@ router.get("/", controller.checkStatus);
 
 router.post("/customers", controller.createCustomer);
 
-router.post("/customers/:customerId/accounts", controller.createAccount);
+router.post("/accounts", controller.createAccount);
 
 router.patch("/customers/:customerId/consent", controller.updateDataSharingConsent);
 

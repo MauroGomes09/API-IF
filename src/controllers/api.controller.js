@@ -4,7 +4,7 @@ import Transaction from '../models/transaction.model.js';
 
 export const checkStatus = async (req, res) => {
   try { 
-    res.status(200).json({ status: "API is running" });  
+    res.status(200).json({ status: 'API is running' });  
  }  catch (error){
     res.status(400).json({ message: error.message });
  }
@@ -22,13 +22,25 @@ export const createCustomer = async (req, res) => {
 
 export const createAccount = async (req, res) => {
   try {
-    const { customerId } = req.params;
+    const { customerId } = req.body;
+
+    if (!customerId) {
+      return res.status(400).json({ message: 'O campo customerId é obrigatório no corpo da requisição.' });
+    }
+
     const customer = await Customer.findById(customerId);
     if (!customer) {
       return res.status(404).json({ message: 'Cliente não encontrado' });
     }
 
-    const newAccount = new Account(req.body);
+    const accountData = {
+      type: req.body.type,
+      branch: req.body.branch,
+      number: req.body.number
+      // Adicione outros campos da conta aqui se houver
+    };
+
+    const newAccount = new Account(accountData);
     const savedAccount = await newAccount.save();
 
     customer.accounts.push(savedAccount._id);
