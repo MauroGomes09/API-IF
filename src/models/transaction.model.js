@@ -7,7 +7,11 @@ const TransactionSchema = new mongoose.Schema({
           default: () => new Date().toISOString().slice(0, 10), 
         },
   description: { type: String, required: true },
-  amount: { type: Number, required: true },
+  amount: { 
+    type: Number, 
+    required: true,
+    min: [0.01, 'O valor da transação deve ser maior que R$ 0,00.'] 
+  },
   type: { type: String, required: true, enum: ['credit', 'debit'] },
   category: { type: String }
 }, {
