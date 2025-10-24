@@ -64,7 +64,7 @@ export const getBalance = async (req, res) => {
 export const createTransaction = async (req, res) => {
   try {
     const { accountId } = req.body;
-    const { description, amount, type, category } = req.body;
+    let { description, amount, type, category } = req.body;
 
     if (!accountId) {
       return res.status(400).json({ message: 'O campo accountId é obrigatório no corpo da requisição.' });
@@ -75,20 +75,26 @@ export const createTransaction = async (req, res) => {
       return res.status(404).json({ message: 'Conta não encontrada' });
     }
 
+    const roundedAmount = Math.round(amount * 100) / 100;
+
+    let currentBalance = Math.round(account.balance * 100) / 100;
+
     if (type === 'debit') {
-      if (account.balance < amount) {
+      if (currentBalance < roundedAmount) { 
         return res.status(400).json({ message: 'Saldo insuficiente' });
       }
-      account.balance -= amount; 
+      currentBalance -= roundedAmount; 
     } else if (type === 'credit') {
-      account.balance += amount; 
+      currentBalance += roundedAmount; 
     } else {
       return res.status(400).json({ message: 'Tipo de transação inválido. Use "credit" ou "debit".' });
     }
 
+    account.balance = currentBalance;
+
     const transactionData = {
       description,
-      amount,
+      amount: roundedAmount,
       type,
       category
     };

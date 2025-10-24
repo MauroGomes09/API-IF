@@ -10,16 +10,16 @@ const TransactionSchema = new mongoose.Schema({
   amount: { 
     type: Number, 
     required: true,
-    min: [0.01, 'O valor da transação deve ser maior que R$ 0,00.'] 
-  },
-  type: { type: String, required: true, enum: ['credit', 'debit'] },
-  category: { type: String },
-  validate: {
+    min: [0.01, 'O valor da transação deve ser maior que R$ 0,00.'],
+    validate: {
     validator: function(v) {
       return Math.round(v * 100) / 100 === v;
     },
     message: props => `${props.value} não é um valor monetário válido. Use no máximo 2 casas decimais.`
-  }
+  } 
+  },
+  type: { type: String, required: true, enum: ['credit', 'debit'] },
+  category: { type: String }
 }, {
   _id: false
 });
