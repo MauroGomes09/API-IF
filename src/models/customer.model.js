@@ -5,7 +5,7 @@ const CustomerSchema = new mongoose.Schema({
   _id: { type: String },
   name: { 
     type: String, 
-    required: [true, 'O campo "name" é obrigatório.'],
+    required: [true, 'O campo name é obrigatório.'],
     trim: true,
     minlength: [3, 'O nome deve ter no mínimo 3 caracteres.'],
     maxlength: [100, 'O nome não pode exceder 100 caracteres.'],
