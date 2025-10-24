@@ -9,7 +9,7 @@ connectDB();
 
 app.use(express.json());
 
-app.use('/api', apiRoutes);
+app.use(apiRoutes);
 
 const PORT = process.env.PORT;
 
