@@ -1,0 +1,511 @@
+{
+  "info": {
+    "_postman_id": "be8e6721-9018-4d50-a089-56586eeacc92",
+    "name": "IF - Localhost API (DEV)",
+    "description": "Collection para testar a Instituição Financeira no ambiente local - AMBIENTE DE DESENVOLVIMENTO",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+    "_exporter_id": "30504852"
+  },
+  "item": [
+    {
+      "name": "1. Status da API",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "http://localhost:3000"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Criar Cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Maria Silva\",\n  \"cpf\": \"12345678900\",\n  \"email\": \"maria.silva@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Criar Conta",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"cus_001\",\n  \"type\": \"checking\",\n  \"branch\": \"0001\",\n  \"number\": \"12345-6\"\n}"
+        },
+        "url": "http://localhost:3000/accounts"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Fazer Depósito",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_001\",\n  \"description\": \"Depósito inicial\",\n  \"amount\": 1000.00,\n  \"type\": \"credit\",\n  \"category\": \"Income\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Consultar Saldo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:3000/accounts/acc_001/balance"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Consultar Extrato",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:3000/transactions/acc_001"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Fazer Saque",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_001\",\n  \"description\": \"Saque no caixa eletrônico\",\n  \"amount\": 200.00,\n  \"type\": \"debit\",\n  \"category\": \"Withdrawal\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    },
+    {
+      "name": "8. Criar Segundo Cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"João Santos\",\n  \"cpf\": \"98765432100\",\n  \"email\": \"joao.santos@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "9. Criar Conta para Segundo Cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"cus_002\",\n  \"type\": \"savings\",\n  \"branch\": \"0002\",\n  \"number\": \"54321-9\"\n}"
+        },
+        "url": "http://localhost:3000/accounts"
+      },
+      "response": []
+    },
+    {
+      "name": "10. Teste de Validação - Cliente sem Nome",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cpf\": \"11111111111\",\n  \"email\": \"teste@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "11. Teste de Validação - Saque sem Saldo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_002\",\n  \"description\": \"Tentativa de saque sem saldo\",\n  \"amount\": 500.00,\n  \"type\": \"debit\",\n  \"category\": \"Withdrawal\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    },
+    {
+      "name": "12. Teste de Validação - CPF Duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cliente Duplicado\",\n  \"cpf\": \"12345678900\",\n  \"email\": \"duplicado@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "13. Teste de Validação - CPF Inválido (formato)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cliente CPF Inválido\",\n  \"cpf\": \"123.456.789-00\",\n  \"email\": \"cpfinvalido@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "14. Teste de Validação - CPF Muito Curto",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cliente CPF Curto\",\n  \"cpf\": \"123456789\",\n  \"email\": \"cpfcurto@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "15. Teste de Validação - Email Inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cliente Email Inválido\",\n  \"cpf\": \"99999999999\",\n  \"email\": \"email-sem-arroba\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "16. Teste de Validação - Conta com Cliente Inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"cus_999\",\n  \"type\": \"checking\",\n  \"branch\": \"9999\",\n  \"number\": \"99999-9\"\n}"
+        },
+        "url": "http://localhost:3000/accounts"
+      },
+      "response": []
+    },
+    {
+      "name": "17. Teste de Validação - Transação com Valor Negativo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_001\",\n  \"description\": \"Valor negativo\",\n  \"amount\": -100.00,\n  \"type\": \"credit\",\n  \"category\": \"Income\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    },
+    {
+      "name": "18. Teste de Validação - Transação com Valor Zero",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_001\",\n  \"description\": \"Valor zero\",\n  \"amount\": 0,\n  \"type\": \"credit\",\n  \"category\": \"Income\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    },
+    {
+      "name": "19. Teste de Validação - Tipo de Transação Inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_001\",\n  \"description\": \"Tipo inválido\",\n  \"amount\": 100.00,\n  \"type\": \"transfer\",\n  \"category\": \"Income\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    },
+    {
+      "name": "20. Teste de Edge Case - Nome Muito Longo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Nome Extremamente Longo Que Deveria Ser Rejeitado Pelo Sistema Pois Excede O Limite Razoável De Caracteres Para Um Nome De Pessoa Física\",\n  \"cpf\": \"88888888888\",\n  \"email\": \"nomelongo@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "21. Teste de Edge Case - Caracteres Especiais no Nome",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"João@#$%Silva123\",\n  \"cpf\": \"77777777777\",\n  \"email\": \"especiais@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "22. Teste de Edge Case - JSON Malformado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cliente JSON\",\n  \"cpf\": \"66666666666\",\n  \"email\": \"json@email.com\"\n  // comentário inválido em JSON\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "23. Teste de Edge Case - Campos Vazios (String Vazia)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"cpf\": \"\",\n  \"email\": \"\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "24. Teste de Edge Case - Campos com Espaços",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"   \",\n  \"cpf\": \"   55555555555   \",\n  \"email\": \"  espacos@email.com  \"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "25. Teste de Edge Case - Conta Duplicada (mesmo número)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": \"cus_001\",\n  \"type\": \"savings\",\n  \"branch\": \"0001\",\n  \"number\": \"12345-6\"\n}"
+        },
+        "url": "http://localhost:3000/accounts"
+      },
+      "response": []
+    },
+    {
+      "name": "26. Teste de Segurança - Injection em Nome",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"'; DROP TABLE customers; --\",\n  \"cpf\": \"44444444444\",\n  \"email\": \"injection@email.com\"\n}"
+        },
+        "url": "http://localhost:3000/customers"
+      },
+      "response": []
+    },
+    {
+      "name": "27. Teste de Consulta - Conta Inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:3000/accounts/acc_999/balance"
+      },
+      "response": []
+    },
+    {
+      "name": "28. Teste de Consulta - Extrato de Conta Inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:3000/transactions/acc_999"
+      },
+      "response": []
+    },
+    {
+      "name": "29. Teste de Performance - Transação com Valor Muito Alto",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_001\",\n  \"description\": \"Valor muito alto\",\n  \"amount\": 999999999.99,\n  \"type\": \"credit\",\n  \"category\": \"Income\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    },
+    {
+      "name": "30. Teste de Formato - Valor com Muitas Casas Decimais",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accountId\": \"acc_001\",\n  \"description\": \"Muitas casas decimais\",\n  \"amount\": 100.123456789,\n  \"type\": \"credit\",\n  \"category\": \"Income\"\n}"
+        },
+        "url": "http://localhost:3000/transactions"
+      },
+      "response": []
+    }
+  ]
+}
