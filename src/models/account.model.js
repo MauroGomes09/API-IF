@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import Counter from './counter.model.js';
 
 const AccountSchema = new mongoose.Schema({
   _id: { type: String },
