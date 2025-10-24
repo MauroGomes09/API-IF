@@ -7,7 +7,7 @@ const AccountSchema = new mongoose.Schema({
   branch: { type: String, required: true },
   number: { type: String, required: true, unique: true },
   balance: { type: Number, default: 0.00 },
-  transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }]
+  transactions: [{ type: String, ref: 'Transaction' }]
 }, {
   _id: false
 });

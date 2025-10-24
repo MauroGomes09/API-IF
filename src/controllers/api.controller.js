@@ -33,12 +33,8 @@ export const createAccount = async (req, res) => {
       return res.status(404).json({ message: 'Cliente não encontrado' });
     }
 
-    const accountData = {
-      type: req.body.type,
-      branch: req.body.branch,
-      number: req.body.number
-      // Adicione outros campos da conta aqui se houver
-    };
+    const accountData = { ...req.body };
+    delete accountData.customerId;
 
     const newAccount = new Account(accountData);
     const savedAccount = await newAccount.save();
@@ -67,8 +63,12 @@ export const getBalance = async (req, res) => {
 
 export const createTransaction = async (req, res) => {
   try {
-    const { accountId } = req.params;
+    const { accountId } = req.body;
     const { description, amount, type, category } = req.body;
+
+    if (!accountId) {
+      return res.status(400).json({ message: 'O campo accountId é obrigatório no corpo da requisição.' });
+    }
 
     const account = await Account.findById(accountId);
     if (!account) {
@@ -86,7 +86,14 @@ export const createTransaction = async (req, res) => {
       return res.status(400).json({ message: 'Tipo de transação inválido. Use "credit" ou "debit".' });
     }
 
-    const newTransaction = new Transaction({ description, amount, type, category });
+    const transactionData = {
+      description,
+      amount,
+      type,
+      category
+    };
+
+    const newTransaction = new Transaction(transactionData);
     const savedTransaction = await newTransaction.save();
     
     account.transactions.push(savedTransaction._id);

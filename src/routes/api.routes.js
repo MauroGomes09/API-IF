@@ -13,8 +13,8 @@ router.patch("/customers/:customerId/consent", controller.updateDataSharingConse
 
 router.get("/accounts/:accountId/balance", controller.getBalance);
 
-router.get("/accounts/:accountId/transactions", controller.listTransaction);
+router.get("/transactions/:accountId", controller.listTransaction);
 
-router.post("/accounts/:accountId/transactions", controller.createTransaction);
+router.post("/transactions", controller.createTransaction);
 
 export default router;
