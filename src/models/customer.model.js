@@ -21,7 +21,7 @@ const CustomerSchema = new mongoose.Schema({
     required: [true, 'O campo e-mail é obrigatório.'], 
     unique: true,
     trim: true,
-    match: [/.+\@.+\..+/, 'Por favor, insira um e-mail válida.'] 
+    match: [/.+\@.+\..+/, 'Por favor, insira um e-mail válido.'] 
   },
   accounts: [{ type: String, ref: 'Account' }],
   consentData: { type: Boolean, default: false }
