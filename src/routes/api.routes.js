@@ -3,7 +3,7 @@ import * as controller from "../controllers/api.controller.js";
 
 const router = express.Router();
 
-router.get("", controller.checkStatus);
+router.get("/", controller.checkStatus);
 
 router.post("/customers", controller.createCustomer);
 
