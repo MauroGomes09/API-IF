@@ -4,10 +4,23 @@ import Transaction from '../models/transaction.model.js';
 
 export const checkStatus = async (req, res) => {
   try { 
-    res.status(200).json({ status: 'API is running' });  
- }  catch (error){
+    const statusInfo = {
+      message: "API da Instituição Financeira - Mauro Artur",
+      version: "1.0.0", 
+      status: "online",
+      endpoints: {
+        status: "GET /",
+        customers: "POST /customers, PATCH /customers/:customerId/consent",
+        accounts: "POST /accounts, GET /accounts/:accountId/balance",
+        transactions: "POST /transactions, GET /transactions/:accountId"
+      }
+    };
+
+    res.status(200).json(statusInfo); 
+
+  } catch (error){
     res.status(400).json({ message: error.message });
- }
+  }
 };
 
 export const createCustomer = async (req, res) => {
