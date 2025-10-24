@@ -102,7 +102,7 @@ Este projeto foi desenvolvido e padronizado para ser 100% compatível com a cole
 - **Testes Funcionais:** Criação de clientes, contas e transações (depósitos/saques), consulta de saldo e extrato.
 - **Testes de Validação e Edge Cases:** Tentativas de criar dados duplicados (CPF, E-mail), dados com formato inválido (CPF, e-mail), valores incorretos (negativos, 0, casas decimais) e verificações de segurança (injeção, caracteres especiais).
 
-Para executar os testes, importe a coleção (`.json`) no Postman e execute as requisições. O script `npm run cleanDB` é recomendado para limpar o banco de dados entre as execuções completas dos testes.
+Para executar os testes, importe a coleção (o arquivo `.json` localizado na pasta `/postman` deste repositório) no Postman e execute as requisições. O script `npm run cleanDB` é recomendado para limpar o banco de dados entre as execuções completas dos testes.
 
 ## Documentação da API (Endpoints)
 
