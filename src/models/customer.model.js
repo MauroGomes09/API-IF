@@ -8,7 +8,8 @@ const CustomerSchema = new mongoose.Schema({
     required: [true, 'O campo "name" é obrigatório.'],
     trim: true,
     minlength: [3, 'O nome deve ter no mínimo 3 caracteres.'],
-    maxlength: [100, 'O nome não pode exceder 100 caracteres.']
+    maxlength: [100, 'O nome não pode exceder 100 caracteres.'],
+    match: [/^[a-zA-ZÀ-ÿ ]+$/, 'O nome deve conter apenas letras e espaços.']
   },
   cpf: { 
     type: String, 
