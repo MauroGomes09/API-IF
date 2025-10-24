@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import Counter from './counter.model.js';
 
 const CustomerSchema = new mongoose.Schema({
-  _id: { type: String, unique: true },
+  _id: { type: String },
   name: { type: String, required: true },
   cpf: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
