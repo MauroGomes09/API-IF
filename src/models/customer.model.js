@@ -3,9 +3,26 @@ import Counter from './counter.model.js';
 
 const CustomerSchema = new mongoose.Schema({
   _id: { type: String },
-  name: { type: String, required: true },
-  cpf: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+  name: { 
+    type: String, 
+    required: [true, 'O campo "name" é obrigatório.'],
+    trim: true,
+    minlength: [3, 'O nome deve ter no mínimo 3 caracteres.'],
+    maxlength: [100, 'O nome não pode exceder 100 caracteres.']
+  },
+  cpf: { 
+    type: String, 
+    required: [true, 'O campo CPF é obrigatório'],
+    unique: true,
+    match: [/^\d{11}$/, 'O CPF deve conter exatamente 11 dígitos numéricos (sem caracteres especiais).'] 
+  },
+  email: { 
+    type: String, 
+    required: [true, 'O campo e-mail é obrigatório.'], 
+    unique: true,
+    trim: true,
+    match: [/.+\@.+\..+/, 'Por favor, insira um e-mail válida.'] 
+  },
   accounts: [{ type: String, ref: 'Account' }],
   consentData: { type: Boolean, default: false }
 }, {
