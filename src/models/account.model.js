@@ -11,10 +11,11 @@ const AccountSchema = new mongoose.Schema({
 }, {
   _id: false
 });
-
+validation
 AccountSchema.pre('save', async function(next) {
   if (this.isNew) {
     try {
+      await this.validate();
       const counter = await Counter.findByIdAndUpdate(
         { _id: 'accountId' },
         { $inc: { seq: 1 } },
@@ -22,8 +23,8 @@ AccountSchema.pre('save', async function(next) {
       );
 
       const newId = 'acc_' + String(counter.seq).padStart(3, '0');
-
       this._id = newId; 
+
       next();
     } catch (error) {
       next(error);

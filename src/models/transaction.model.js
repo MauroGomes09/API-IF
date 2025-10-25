@@ -27,6 +27,7 @@ const TransactionSchema = new mongoose.Schema({
 TransactionSchema.pre('save', async function(next) {
   if (this.isNew) {
     try {
+      await this.validate();
       const counter = await Counter.findByIdAndUpdate(
         { _id: 'transactionId' }, 
         { $inc: { seq: 1 } },
@@ -35,6 +36,7 @@ TransactionSchema.pre('save', async function(next) {
 
       const newId = 'txn_' + String(counter.seq).padStart(3, '0');
       this._id = newId;
+
       next();
     } catch (error) {
       next(error);
