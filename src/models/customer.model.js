@@ -33,7 +33,7 @@ const CustomerSchema = new mongoose.Schema({
 CustomerSchema.pre('save', async function(next) {
   if (this.isNew) { 
     try {
-      await this.validate();
+      
       const counter = await Counter.findByIdAndUpdate(
         { _id: 'customerId' },      
         { $inc: { seq: 1 } },     
