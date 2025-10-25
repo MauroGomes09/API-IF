@@ -11,7 +11,7 @@ const AccountSchema = new mongoose.Schema({
 }, {
   _id: false
 });
-validation
+
 AccountSchema.pre('save', async function(next) {
   if (this.isNew) {
     try {
