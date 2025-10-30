@@ -1,6 +1,8 @@
 import Customer from '../models/customer.model.js';
 import Account from '../models/account.model.js';
 import Transaction from '../models/transaction.model.js';
+import { generateToken } from '../services/authService.js';
+import { getBalanceAndVerifyOwner, getTransactionsAndVerifyOwner } from '../services/accountService.js';
 
 export const checkStatus = async (req, res) => {
   try { 
@@ -35,7 +37,7 @@ export const createCustomer = async (req, res) => {
 
 export const createAccount = async (req, res) => {
   try {
-    const { customerId } = req.body;
+    const { customerId, type, branch, number } = req.body;
 
     if (!customerId) {
       return res.status(400).json({ message: 'O campo customerId é obrigatório no corpo da requisição.' });
@@ -46,10 +48,12 @@ export const createAccount = async (req, res) => {
       return res.status(404).json({ message: 'Cliente não encontrado' });
     }
 
-    const accountData = { ...req.body };
-    delete accountData.customerId;
-
-    const newAccount = new Account(accountData);
+    const newAccount = new Account({
+      customerId,
+      type,
+      branch,
+      number
+    });
     const savedAccount = await newAccount.save();
 
     customer.accounts.push(savedAccount._id);
@@ -62,16 +66,24 @@ export const createAccount = async (req, res) => {
 };
 
 export const getBalance = async (req, res) => {
-  try {
-    const { accountId } = req.params;
-    const account = await Account.findById(accountId);
-    if (!account) {
-      return res.status(404).json({ message: 'Conta não encontrada' });
+    try {
+        const scopes = req.user.scope || []; 
+        
+        if (!scopes.includes('read:balance')) {
+            return res.status(403).json({ message: "Acesso negado. O token não possui a permissão 'read:balance'." });
+        }
+
+        const customerIdFromToken = req.user.id;
+        const { accountId } = req.params;
+        
+        const balance = await getBalanceAndVerifyOwner(accountId, customerIdFromToken);
+
+        res.status(200).json({ balance: balance, accountId });
+
+    } catch (error) {
+        const status = error.status || 500;
+        res.status(status).json({ message: error.message });
     }
-    res.status(200).json({ balance: account.balance });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 export const createTransaction = async (req, res) => {
@@ -124,19 +136,26 @@ export const createTransaction = async (req, res) => {
   }
 };
 
-export const listTransaction = async (req, res) => {
-  try {
-    const { accountId } = req.params;
-    const account = await Account.findById(accountId).populate('transactions');
-    
-    if (!account) {
-      return res.status(404).json({ message: 'Conta não encontrada' });
+export const getTransactions = async (req, res) => {
+    try {
+        const scopes = req.user.scope || []; 
+        
+        if (!scopes.includes('read:transactions')) {
+            return res.status(403).json({ message: "Acesso negado. O token não possui a permissão 'read:transactions'." });
+        }
+
+        const customerIdFromToken = req.user.id;
+        const { accountId } = req.params;
+        const filters = req.query;
+
+        const transactions = await getTransactionsAndVerifyOwner(accountId, customerIdFromToken, filters);
+
+        res.status(200).json({ transactions: transactions, accountId });
+
+    } catch (error) {
+        const status = error.status || 500;
+        res.status(status).json({ message: error.message });
     }
-    
-    res.status(200).json(account.transactions);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 export const updateDataSharingConsent = async(req, res) => {
@@ -163,4 +182,36 @@ export const updateDataSharingConsent = async(req, res) => {
   } catch (error) {
       res.status(500).json({ message: "Erro ao atualizar consentimento do usuário!", error: error.message })
   }
-}
+};
+
+export const getAccessToken = async (req, res) => {
+    try {
+        const { customerId } = req.body; 
+
+        if (!customerId) {
+            return res.status(400).json({ message: "customerId é necessário." });
+        }
+
+        const customer = await Customer.findById(customerId);
+
+        if (!customer) {
+            return res.status(404).json({ message: "Cliente não encontrado." });
+        }
+
+        const tokenPayload = {
+            id: customerId, 
+            scope: ['read:balance', 'read:transactions', 'read:customer_data'] 
+        };
+
+        const token = generateToken(tokenPayload);
+
+        res.status(200).json({ 
+            token: token,
+            tokenType: 'Bearer',
+            expiresIn: 3600 
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: "Erro ao gerar token de acesso.", error: error.message });
+    }
+};
