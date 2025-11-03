@@ -3,6 +3,7 @@ import Counter from './counter.model.js';
 
 const TransactionSchema = new mongoose.Schema({
   _id: {type: String },
+  accountId: { type: String, ref: 'Account', required: true },
   date: { type: String, 
           default: () => new Date().toISOString().slice(0, 10), 
         },

@@ -46,8 +46,10 @@ export const createAccount = async (req, res) => {
       return res.status(404).json({ message: 'Cliente não encontrado' });
     }
 
-    const accountData = { ...req.body };
-    delete accountData.customerId;
+    const accountData = {
+      ...req.body,
+      customer_id: customerId 
+    };
 
     const newAccount = new Account(accountData);
     const savedAccount = await newAccount.save();
@@ -64,13 +66,19 @@ export const createAccount = async (req, res) => {
 export const getBalance = async (req, res) => {
   try {
     const { accountId } = req.params;
-    const account = await Account.findById(accountId);
+    const account = await Account.findById(accountId).select('balance');
+
     if (!account) {
-      return res.status(404).json({ message: 'Conta não encontrada' });
+      return res.status(404).json({ error: 'Conta não encontrada.' });
     }
-    res.status(200).json({ balance: account.balance });
+
+    res.json({
+      accountId: account._id,
+      balance: account.balance
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Erro ao consultar saldo:', error);
+    res.status(500).json({ error: 'Erro interno ao consultar saldo.' });
   }
 };
 
@@ -106,6 +114,7 @@ export const createTransaction = async (req, res) => {
     account.balance = currentBalance;
 
     const transactionData = {
+      accountId: account._id,
       description,
       amount,
       type,
@@ -124,22 +133,30 @@ export const createTransaction = async (req, res) => {
   }
 };
 
-export const listTransaction = async (req, res) => {
+export const getTransactions = async (req, res) => {
   try {
     const { accountId } = req.params;
-    const account = await Account.findById(accountId).populate('transactions');
-    
-    if (!account) {
-      return res.status(404).json({ message: 'Conta não encontrada' });
-    }
-    
-    res.status(200).json(account.transactions);
+    const accountTransactions = await Transaction.find({ 
+      accountId: accountId 
+    });
+
+    const response = accountTransactions.map(t => ({
+      _id: t._id, 
+      date: t.date,
+      description: t.description,
+      amount: t.amount,
+      type: t.type,
+      category: t.category
+    }));
+
+    res.json(response);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Erro ao listar transações:', error);
+    res.status(500).json({ error: 'Erro interno ao listar transações.' });
   }
 };
 
-export const updateDataSharingConsent = async(req, res) => {
+export const updateConsent = async(req, res) => {
   try{
       const { customerId } = req.params;
       const { consent } = req.body;
@@ -150,7 +167,7 @@ export const updateDataSharingConsent = async(req, res) => {
 
       const updatedCustomer = await Customer.findByIdAndUpdate(
           customerId,
-        { consentData: consent},
+        { consent_given: consent},
         { new: true }
       );
 

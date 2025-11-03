@@ -3,6 +3,7 @@ import Counter from './counter.model.js';
 
 const AccountSchema = new mongoose.Schema({
   _id: { type: String },
+  customer_id: { type: String, ref: 'Customer', required: true },
   type: { type: String, required: true, enum: ['checking', 'savings'] },
   branch: { type: String, required: true },
   number: { type: String, required: true, unique: true },
