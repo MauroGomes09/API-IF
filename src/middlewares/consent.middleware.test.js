@@ -1,131 +1,127 @@
-import { Types } from 'mongoose';
 import { validateConsent } from '../middlewares/consent.middleware.js';
-import Account from '../models/account.model.js'; 
+
+import Account from '../models/account.model.js';
+import Consent from '../models/consent.model.js';
+
 jest.mock('../models/account.model.js');
+jest.mock('../models/consent.model.js');
 
-const createMocks = (accountId) => {
-  const req = {
-    params: { accountId: accountId }
+let mockReq;
+let mockRes;
+let mockNext;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+
+  mockReq = {
+    params: {} 
   };
-  const res = {
-    status: jest.fn(() => res), 
-    json: jest.fn(() => res)
+  mockRes = {
+    status: jest.fn(() => mockRes),
+    json: jest.fn(() => mockRes)
   };
-  const next = jest.fn();
-  
-  return { req, res, next };
-};
+  mockNext = jest.fn();
+});
 
+describe('Middleware: validateConsent (Factory)', () => {
 
-describe('Middleware: validateConsent', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    Account.aggregate.mockClear(); 
-  });
+  it('deve chamar next() se o consentimento for válido para BALANCES_READ', async () => {
+    mockReq.params = { accountId: 'acc_001' };
 
-  it('deve chamar next() se o consentimento for true', async () => {
-    const accountId = new Types.ObjectId().toHexString();
-    const { req, res, next } = createMocks(accountId);
+    const middleware = validateConsent('BALANCES_READ');
 
-    const mockDbResult = [
-      {
-        _id: accountId,
-        customer_id: new Types.ObjectId(),
-        consent_given: true 
-      }
-    ];
-    Account.aggregate.mockResolvedValue(mockDbResult);
-
-    await validateConsent(req, res, next);
-
-    expect(Account.aggregate).toHaveBeenCalledTimes(1); 
-    expect(next).toHaveBeenCalledTimes(1);             
-    expect(res.status).not.toHaveBeenCalled();        
-    expect(res.json).not.toHaveBeenCalled();
-  });
-
-  it('deve retornar 403 se o consentimento for false', async () => {
-    const accountId = new Types.ObjectId().toHexString();
-    const { req, res, next } = createMocks(accountId);
-
-    const mockDbResult = [
-      {
-        _id: accountId,
-        customer_id: new Types.ObjectId(),
-        consent_given: false 
-      }
-    ];
-    Account.aggregate.mockResolvedValue(mockDbResult);
-
-    await validateConsent(req, res, next);
-
-    expect(Account.aggregate).toHaveBeenCalledTimes(1);
-    expect(next).not.toHaveBeenCalled(); 
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({
-      error: expect.stringContaining('Acesso negado') 
+    Account.findById.mockResolvedValue({ _id: 'acc_001', customer_id: 'cus_001' });
+    
+    Consent.findOne.mockResolvedValue({
+      _id: 'con_001',
+      status: 'AUTHORIZED',
+      expirationDateTime: new Date(Date.now() + 86400000), 
+      permissions: ['ACCOUNTS_READ', 'BALANCES_READ'] 
     });
+
+    await middleware(mockReq, mockRes, mockNext);
+
+    expect(Account.findById).toHaveBeenCalledWith('acc_001');
+    expect(Consent.findOne).toHaveBeenCalledTimes(1);
+    expect(mockNext).toHaveBeenCalledTimes(1); 
+    expect(mockRes.status).not.toHaveBeenCalled();
+  });
+
+  it('deve chamar next() se o consentimento for válido para CUSTOMER_DATA_READ', async () => {
+    mockReq.params = { customerId: 'cus_001' };
+
+    const middleware = validateConsent('CUSTOMER_DATA_READ');
+
+    Consent.findOne.mockResolvedValue({
+      _id: 'con_001',
+      status: 'AUTHORIZED',
+      expirationDateTime: new Date(Date.now() + 86400000),
+      permissions: ['CUSTOMER_DATA_READ']
+    });
+
+    await middleware(mockReq, mockRes, mockNext);
+
+    expect(Account.findById).not.toHaveBeenCalled(); 
+    expect(Consent.findOne).toHaveBeenCalledTimes(1);
+    expect(mockNext).toHaveBeenCalledTimes(1); 
   });
 
   it('deve retornar 404 se a conta não for encontrada', async () => {
-    const accountId = new Types.ObjectId().toHexString();
-    const { req, res, next } = createMocks(accountId);
+    mockReq.params = { accountId: 'acc_999' };
+    const middleware = validateConsent('BALANCES_READ');
 
-    Account.aggregate.mockResolvedValue([]); 
+    Account.findById.mockResolvedValue(null);
 
-    await validateConsent(req, res, next);
+    await middleware(mockReq, mockRes, mockNext);
 
-    expect(Account.aggregate).toHaveBeenCalledTimes(1);
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Conta não encontrada.' });
+    expect(Account.findById).toHaveBeenCalledWith('acc_999');
+    expect(Consent.findOne).not.toHaveBeenCalled(); 
+    expect(mockNext).not.toHaveBeenCalled();
+    expect(mockRes.status).toHaveBeenCalledWith(404);
+    expect(mockRes.json).toHaveBeenCalledWith({ error: 'Conta não encontrada.' });
   });
 
-  it('deve retornar 404 se o cliente não for encontrado (customer_id nulo)', async () => {
-    const accountId = new Types.ObjectId().toHexString();
-    const { req, res, next } = createMocks(accountId);
+  it('deve retornar 403 se nenhum consentimento ATIVO for encontrado', async () => {
+    mockReq.params = { accountId: 'acc_001' };
+    const middleware = validateConsent('BALANCES_READ');
 
-    const mockDbResult = [
-      {
-        _id: accountId,
-        customer_id: null, 
-        consent_given: null
-      }
-    ];
-    Account.aggregate.mockResolvedValue(mockDbResult);
+    Account.findById.mockResolvedValue({ _id: 'acc_001', customer_id: 'cus_001' });
+    
+    Consent.findOne.mockResolvedValue(null);
 
-    await validateConsent(req, res, next);
+    await middleware(mockReq, mockRes, mockNext);
 
-    expect(Account.aggregate).toHaveBeenCalledTimes(1);
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Cliente associado à conta não encontrado.' });
-  });
-  
-  it('deve retornar 404 se o accountId não existir no banco', async () => {
-    const { req, res, next } = createMocks('123-id-invalido'); 
-    Account.aggregate.mockResolvedValue([]);
-    await validateConsent(req, res, next);
-
-    expect(Account.aggregate).toHaveBeenCalledTimes(1); 
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Conta não encontrada.' });
+    expect(Account.findById).toHaveBeenCalledTimes(1);
+    expect(Consent.findOne).toHaveBeenCalledTimes(1);
+    expect(mockNext).not.toHaveBeenCalled();
+    expect(mockRes.status).toHaveBeenCalledWith(403);
+    expect(mockRes.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.stringContaining('não possui um consentimento ativo') })
+    );
   });
   
-  it('deve retornar 500 se o aggregate falhar', async () => {
-    const accountId = new Types.ObjectId().toHexString();
-    const { req, res, next } = createMocks(accountId);
+  it('deve retornar 403 se o consentimento não tiver a permissão necessária', async () => {
+    mockReq.params = { accountId: 'acc_001' };
+    
+    const middleware = validateConsent('BALANCES_READ'); 
 
-    const mockError = new Error('Falha na conexão com o banco');
-    Account.aggregate.mockRejectedValue(mockError);
+    Account.findById.mockResolvedValue({ _id: 'acc_001', customer_id: 'cus_001' });
+    
+    Consent.findOne.mockResolvedValue({
+      _id: 'con_001',
+      status: 'AUTHORIZED',
+      expirationDateTime: new Date(Date.now() + 86400000),
+      permissions: ['ACCOUNTS_READ', 'TRANSACTIONS_READ'] 
+    });
 
-    await validateConsent(req, res, next);
+    await middleware(mockReq, mockRes, mockNext);
 
-    expect(Account.aggregate).toHaveBeenCalledTimes(1);
-    expect(next).not.toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: expect.stringContaining('Erro interno') });
+    expect(Consent.findOne).toHaveBeenCalledTimes(1);
+    expect(mockNext).not.toHaveBeenCalled();
+    expect(mockRes.status).toHaveBeenCalledWith(403);
+    expect(mockRes.json).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.stringContaining('permissão necessária (BALANCES_READ)') })
+    );
   });
 
 });

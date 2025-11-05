@@ -1,7 +1,7 @@
-export const aggregate = jest.fn();
+export const findById = jest.fn();
 
 const Account = {
-  aggregate: aggregate
+  findById: findById
 };
 
 export default Account;
