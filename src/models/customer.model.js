@@ -24,8 +24,7 @@ const CustomerSchema = new mongoose.Schema({
     trim: true,
     match: [/.+\@.+\..+/, 'Por favor, insira um e-mail válido.'] 
   },
-  accounts: [{ type: String, ref: 'Account' }],
-  consent_given: { type: Boolean, default: false }
+  accounts: [{ type: String, ref: 'Account' }]
 }, {
   _id: false
 });

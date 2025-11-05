@@ -1,57 +1,51 @@
 import Account from '../models/account.model.js';
+import Consent from '../models/consent.model.js';
 
-export const validateConsent = async (req, res, next) => {
-  try {
-    const { accountId } = req.params;
+export const validateConsent = (requiredPermission) => {
+  
+  return async (req, res, next) => {
+    try {
+      const { accountId, customerId: paramCustomerId } = req.params;
+      let customerId = paramCustomerId;
 
-    const aggregationPipeline = [
-      {
-        $match: { _id: accountId }
-      },
-      {
-        $lookup: {
-          from: 'customers',         
-          localField: 'customer_id',   
-          foreignField: '_id',         
-          as: 'customerData'           
+      if (accountId) {
+        const account = await Account.findById(accountId);
+        if (!account) {
+          return res.status(404).json({ error: 'Conta não encontrada.' });
         }
-      },
-      {
-        $unwind: {
-          path: '$customerData',
-          preserveNullAndEmptyArrays: true 
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          customer_id: 1,
-          consent_given: '$customerData.consent_given'
+        customerId = account.customer_id;
+        if (!customerId) {
+          return res.status(404).json({ error: 'Conta não associada a um cliente.' });
         }
       }
-    ];
+      
+      if (!customerId) {
+         return res.status(400).json({ error: 'ID de cliente ou conta não fornecido.' });
+      }
 
-    const result = await Account.aggregate(aggregationPipeline);
-
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'Conta não encontrada.' });
-    }
-
-    const data = result[0];
-
-    if (!data.customer_id) {
-      return res.status(404).json({ error: 'Cliente associado à conta não encontrado.' });
-    }
-
-    if (!data.consent_given) {
-      return res.status(403).json({
-        error: 'Acesso negado: Cliente não forneceu consentimento (LGPD).',
+      const validConsent = await Consent.findOne({
+        customerId: customerId,
+        status: 'AUTHORIZED', 
+        expirationDateTime: { $gt: new Date() } 
       });
-    }
 
-    next();
-  } catch (error) {
-    console.error('Erro no middleware de consentimento:', error);
-    res.status(500).json({ error: 'Erro interno ao validar consentimento.' });
-  }
+      if (!validConsent) {
+        return res.status(403).json({
+          error: 'Acesso negado: O cliente não possui um consentimento ativo.',
+        });
+      }
+
+      if (!validConsent.permissions.includes(requiredPermission)) {
+        return res.status(403).json({
+          error: `Acesso negado: O consentimento não inclui a permissão necessária (${requiredPermission}).`,
+        });
+      }
+
+      next();
+
+    } catch (error) {
+      console.error('Erro no middleware de consentimento:', error);
+      res.status(500).json({ error: 'Erro interno ao validar consentimento.' });
+    }
+  };
 };

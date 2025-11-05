@@ -5,6 +5,7 @@ import Customer from './src/models/customer.model.js';
 import Account from './src/models/account.model.js';
 import Transaction from './src/models/transaction.model.js';
 import Counter from './src/models/counter.model.js'; 
+import Consent from './src/models/consent.model.js';
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -23,7 +24,8 @@ const cleanDatabase = async () => {
       Customer.deleteMany({}),
       Account.deleteMany({}),
       Transaction.deleteMany({}),
-      Counter.deleteMany({})
+      Counter.deleteMany({}),
+      Consent.deleteMany({})
     ];
 
     await Promise.all(deletePromises);

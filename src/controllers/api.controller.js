@@ -1,6 +1,7 @@
 import Customer from '../models/customer.model.js';
 import Account from '../models/account.model.js';
 import Transaction from '../models/transaction.model.js';
+import Consent from '../models/consent.model.js';
 
 export const checkStatus = async (req, res) => {
   try { 
@@ -156,28 +157,114 @@ export const getTransactions = async (req, res) => {
   }
 };
 
-export const updateConsent = async(req, res) => {
-  try{
-      const { customerId } = req.params;
-      const { consent } = req.body;
+export const getCustomerData = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    const customer = await Customer.findById(customerId)
+                            .select('-accounts -__v'); 
 
-      if (typeof consent !== 'boolean') {
-        return res.status(400).json({ message: 'Consent deve ser "true" ou "false"' });
-      }
-
-      const updatedCustomer = await Customer.findByIdAndUpdate(
-          customerId,
-        { consent_given: consent},
-        { new: true }
-      );
-
-      if (!updatedCustomer) {
-        return res.status(404).json({ message: 'Usuário não encontrado!' })
-      }
-
-      res.status(200).json(updatedCustomer);
+    if (!customer) {
+      return res.status(404).json({ error: 'Cliente não encontrado.' });
+    }
+    
+    res.status(200).json(customer);
 
   } catch (error) {
-      res.status(500).json({ message: "Erro ao atualizar consentimento do usuário!", error: error.message })
+    res.status(500).json({ message: "Erro ao buscar dados do cliente", error: error.message });
   }
-}
+};
+
+export const getCustomerAccounts = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const customer = await Customer.findById(customerId)
+                            .populate('accounts');
+
+    if (!customer) {
+      return res.status(404).json({ error: 'Cliente não encontrado.' });
+    }
+
+    res.status(200).json(customer.accounts);
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar contas do cliente", error: error.message });
+  }
+};
+
+export const createConsent = async (req, res) => {
+  try {
+    const { customerId, permissions } = req.body;
+
+    if (!customerId || !permissions) {
+      return res.status(400).json({ error: 'customerId e permissions (array) são obrigatórios.' });
+    }
+
+    const newConsent = new Consent({
+      customerId: customerId,
+      permissions: permissions, 
+      status: 'AUTHORIZED', 
+    });
+
+    const savedConsent = await newConsent.save();
+
+    const consentObject = savedConsent.toObject();
+    
+    const response = {
+      ...consentObject,
+      creationDateTime: consentObject.creationDateTime.toISOString().slice(0, 10),
+      expirationDateTime: consentObject.expirationDateTime.toISOString().slice(0, 10)
+    };
+
+    res.status(201).json(response);
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao criar consentimento", error: error.message });
+  }
+};
+
+export const revokeConsent = async (req, res) => {
+  try {
+    const { consentId } = req.params;
+
+    const revokedConsent = await Consent.findByIdAndUpdate(
+      consentId,
+      { status: 'REVOKED' },
+      { new: true } 
+    );
+
+    if (!revokedConsent) {
+      return res.status(404).json({ error: 'Consentimento não encontrado.' });
+    }
+    
+    res.status(204).send();
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao revogar consentimento", error: error.message });
+  }
+};
+
+export const getConsentById = async (req, res) => {
+  try {
+    const { consentId } = req.params;
+    const consent = await Consent.findById(consentId);
+
+    if (!consent) {
+      return res.status(404).json({ error: 'Consentimento não encontrado.' });
+    }
+    
+    const consentObject = consent.toObject();
+    const response = {
+      ...consentObject,
+      creationDateTime: consentObject.creationDateTime.toISOString().slice(0, 10),
+      expirationDateTime: consentObject.expirationDateTime.toISOString().slice(0, 10)
+    };
+    
+    res.status(200).json(response);
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar consentimento", error: error.message });
+  }
+};
+
