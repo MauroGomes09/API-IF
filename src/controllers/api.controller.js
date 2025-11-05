@@ -7,13 +7,26 @@ export const checkStatus = async (req, res) => {
   try { 
     const statusInfo = {
       message: "API da Instituição Financeira - Mauro Artur",
-      version: "1.0.0", 
+      version: "2.0.0", 
       status: "online",
       endpoints: {
-        status: "GET /",
-        customers: "POST /customers, PATCH /customers/:customerId/consent",
-        accounts: "POST /accounts, GET /accounts/:accountId/balance",
-        transactions: "POST /transactions, GET /transactions/:accountId"
+        open: [
+          "GET /openfinance/",
+          "POST /openfinance/customers",
+          "POST /openfinance/accounts",
+          "POST /openfinance/transactions"
+        ],
+        consent: [
+          "POST /openfinance/consents",
+          "GET /openfinance/consents/:consentId",
+          "DELETE /openfinance/consents/:consentId"
+        ],
+        protected: [
+          "GET /openfinance/customers/:customerId",
+          "GET /openfinance/customers/:customerId/accounts",
+          "GET /openfinance/accounts/:accountId/balance",
+          "GET /openfinance/transactions/:accountId"
+        ]
       }
     };
 
