@@ -19,7 +19,7 @@ Este projeto inclui gerenciamento de clientes, contas (corrente/poupança) e tra
     - [Instalação](#instalação)
     - [Configuração do Ambiente](#configuração-do-ambiente)
   - [Scripts Disponíveis](#scripts-disponíveis)
-  - [Testes (Postman)](#testes-postman)
+  - [Testes](#testes)
   - [Documentação da API (Endpoints)](#documentação-da-api-endpoints)
     - [Status](#status)
       - [`GET /`](#get-)
@@ -95,12 +95,63 @@ Você pode executar os seguintes scripts a partir do terminal (definidos no `pac
 - **`npm start`**: Inicia o servidor em modo de produção.
 - **`npm run cleanDB`**: Executa um script para limpar todas as coleções (`customers`, `accounts`, `transactions`, `counters`) do banco de dados, útil para testes.
 
-## Testes (Postman)
+## Testes 
 
-Este projeto foi desenvolvido e padronizado para ser 100% compatível com a coleção de testes do Postman fornecida. A coleção inclui 30 testes que cobrem:
+A robustez, segurança e conformidade da API são validadas através de duas suítes de teste complementares, que cobrem a lógica de unidade e o fluxo de integração de ponta-a-ponta (E2E).
 
-- **Testes Funcionais:** Criação de clientes, contas e transações (depósitos/saques), consulta de saldo e extrato.
-- **Testes de Validação e Edge Cases:** Tentativas de criar dados duplicados (CPF, E-mail), dados com formato inválido (CPF, e-mail), valores incorretos (negativos, 0, casas decimais) e verificações de segurança (injeção, caracteres especiais).
+1. Testes de Unidade (Jest)
+Os testes de unidade focam na peça mais crítica da arquitetura de segurança: o middleware de consentimento. A suíte de testes valida a "fábrica" de middleware validateConsent(permission).
+
+- Lógica de Permissão: Simula ("mocka") as respostas dos Models Account e Consent para garantir que a lógica de permissão granular (ex: BALANCES_READ, CUSTOMER_DATA_READ) é aplicada corretamente.
+
+- Contexto de Rota: Valida os dois cenários de busca de customerId:
+
+  1. Rotas de conta (ex: /accounts/:accountId), onde o customerId é derivado da conta.
+
+  2. Rotas de cliente (ex: /customers/:customerId), onde o customerId é direto.
+
+- Caminhos de Falha: Confirma que todos os cenários de negação de acesso retornam a resposta de erro apropriada, incluindo:
+
+  - 404 - Conta não encontrada.
+
+  - 403 - Sem consentimento ativo (Status REVOKED ou data expirada).
+
+  - 403 - Permissão insuficiente (Ex: Tentar acessar BALANCES_READ possuindo apenas ACCOUNTS_READ).
+
+2. Testes End-to-End (Postman)
+Uma coleção automatizada de 19 testes E2E valida o fluxo completo da API, simulando um caso de uso real do padrão Open Finance do início ao fim.
+
+A coleção valida sequencialmente:
+
+   1. Padronização: Confirma que todas as rotas respondem corretamente sob o prefixo global /openfinance.
+   
+   2. Criação de Entidades: Valida a criação bem-sucedida de POST /customers e POST /accounts.
+   
+   3. Segurança (Default-Deny):
+      - Executa tentativas de acesso a todas as 4 rotas de dados protegidas (/balance, /accounts, /transactions, /customers/:id) antes da criação de um consentimento.
+      - Confirma que a API retorna o erro 403 Forbidden em todos os casos.
+  
+   4. Fluxo de Consentimento (Criação e Consulta):
+
+      - Valida a criação de um novo registro de consentimento (POST /consents), enviando um customerId e uma lista de permissões (ex: ['BALANCES_READ', 'ACCOUNTS_READ']).
+      - Confirma que o registro é salvo com status: 'AUTHORIZED' e a data de expiração correta (lógica do Model).
+      - Valida a consulta do consentimento (GET /consents/:id).
+
+   5. Verificação de Acesso (Sucesso):
+
+      - Após o consentimento ser validado, o teste acessa todas as 4 rotas protegidas novamente e confirma que a API agora retorna 200 OK.
+
+   6. Lógica de Negócio (Transações e Saldo):
+
+      - Cria uma transação de crédito (ex: +500) usando POST /transactions.
+      - Consulta o extrato (GET /transactions/:id) para validar a criação da transação.
+      - Consulta o saldo (GET /accounts/:id/balance) novamente para validar se a lógica de negócio foi executada e o saldo foi atualizado (ex: Saldo de 1000 + 500 = 1500).
+
+   7. Fluxo de Revogação (Segurança):
+
+      - Revoga o consentimento (DELETE /consents/:id).
+      - Confirma que o status do consentimento foi atualizado para REVOKED.
+      - Tenta acessar as rotas protegidas uma última vez e confirma que elas voltaram a retornar 403 Forbidden, validando o ciclo de vida completo do consentimento.
 
 Para executar os testes, importe a coleção (o arquivo `.json` localizado na pasta `/postman` deste repositório) no Postman e execute as requisições. O script `npm run cleanDB` é recomendado para limpar o banco de dados entre as execuções completas dos testes.
 
