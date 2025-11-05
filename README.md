@@ -22,14 +22,20 @@ Este projeto inclui gerenciamento de clientes, contas (corrente/poupança) e tra
   - [Testes](#testes)
   - [Documentação da API (Endpoints)](#documentação-da-api-endpoints)
     - [Status](#status)
-      - [`GET /`](#get-)
-      - [`PATCH /customers/:customerId/consent`](#patch-customerscustomeridconsent)
-    - [Contas (Accounts)](#contas-accounts)
-      - [`POST /accounts`](#post-accounts)
-      - [`GET /accounts/:accountId/balance`](#get-accountsaccountidbalance)
-    - [Transações (Transactions)](#transações-transactions)
-      - [`POST /transactions`](#post-transactions)
-      - [`GET /transactions/:accountId`](#get-transactionsaccountid)
+      - [`GET /openfinance/`](#get-openfinance)
+    - [**Rotas Abertas (Criação de Entidades)**](#rotas-abertas-criação-de-entidades)
+      - [`POST /openfinance/customers`](#post-openfinancecustomers)
+      - [`POST /openfinance/accounts`](#post-openfinanceaccounts)
+      - [`POST /openfinance/transactions`](#post-openfinancetransactions)
+    - [**Fluxo de Consentimento**](#fluxo-de-consentimento)
+      - [`POST /openfinance/consents`](#post-openfinanceconsents)
+      - [`GET /openfinance/consents/:consentId`](#get-openfinanceconsentsconsentid)
+      - [`DELETE /openfinance/consents/:consentId`](#delete-openfinanceconsentsconsentid)
+    - [**Rotas Protegidas (Leitura de Dados)**](#rotas-protegidas-leitura-de-dados)
+      - [`GET /openfinance/customers/:customerId`](#get-openfinancecustomerscustomerid)
+      - [`GET /openfinance/customers/:customerId/accounts`](#get-openfinancecustomerscustomeridaccounts)
+      - [`GET /openfinance/accounts/:accountId/balance`](#get-openfinanceaccountsaccountidbalance)
+      - [`GET /openfinance/transactions/:accountId`](#get-openfinancetransactionsaccountid)
   - [Estrutura de Dados (Models)](#estrutura-de-dados-models)
   - [Features Principais](#features-principais)
   - [Autor](#autor)
@@ -157,27 +163,51 @@ Para executar os testes, importe a coleção (o arquivo `.json` localizado na pa
 
 ## Documentação da API (Endpoints)
 
-A URL base para todos os endpoints é `http://localhost:3000` (ou a porta definida no seu `.env`).
+A URL base para todos os endpoints da API é: https://sua-url-da-vercel.vercel.app/openfinance (ou http://localhost:3000/openfinance em ambiente de desenvolvimento).
 
 ---
 
 ### Status
 
-#### `GET /`
+#### `GET /openfinance/`
 
 Verifica o status da API.
 
 - **Resposta de Sucesso (200 OK):**
   ```json
   {
-    "status": "API is running"
+  "message": "API Instituição Financeira (Padrão Open Finance) - Mauro Artur",
+  "version": "2.0.0",
+  "status": "online",
+  "endpoints": {
+    "open": [
+      "GET /openfinance/",
+      "POST /openfinance/customers",
+      "POST /openfinance/accounts",
+      "POST /openfinance/transactions"
+    ],
+    "consent": [
+      "POST /openfinance/consents",
+      "GET /openfinance/consents/:consentId",
+      "DELETE /openfinance/consents/:consentId"
+    ],
+    "protected": [
+      "GET /openfinance/customers/:customerId",
+      "GET /openfinance/customers/:customerId/accounts",
+      "GET /openfinance/accounts/:accountId/balance",
+      "GET /openfinance/transactions/:accountId"
+    ]
   }
+  }
+  ```
 
 ---
 
-### Clientes (Customers)
+### **Rotas Abertas (Criação de Entidades)**
 
-#### `POST /customers`
+Estas rotas são abertas e não requerem consentimento, pois são usadas para criar as entidades principais (Clientes, Contas e Transações).
+
+#### `POST /openfinance/customers`
 
 Cria um novo cliente.
 
@@ -193,12 +223,11 @@ Cria um novo cliente.
 - **Resposta de Sucesso (201 Created):**
 ```json
   {
-    "_id": "cus_001",
-    "name": "Maria Silva",
-    "cpf": "12345678900",
-    "email": "maria.silva@email.com",
-    "accounts": [],
-    "consentData": false
+  "_id": "cus_001",
+  "name": "Maria Silva",
+  "cpf": "12345678900",
+  "email": "maria.silva@email.com",
+  "accounts": []
   }
   ```
 
@@ -206,92 +235,38 @@ Cria um novo cliente.
   - CPF duplicado, CPF com formato inválido (`"message": "O CPF deve conter exatamente 11 dígitos numéricos..."`).
   - E-mail inválido, campos obrigatórios faltando.
 
-#### `PATCH /customers/:customerId/consent`
+#### `POST /openfinance/accounts`
 
-Atualiza o consentimento de compartilhamento de dados de um cliente.
+Cria uma nova conta e a associa a um cliente existente.
 
-- **Parâmetros da URL:**
-  - `customerId` (string): O ID do cliente a ser atualizado (ex: `cus_001`).
 - **Corpo da Requisição (Body):**
   Espera um objeto JSON com a chave `consent`.
 ```json
   {
-    "consent": true
-  }
-  ```
-
-- **Resposta de Sucesso (200 OK):**
-  Retorna o documento completo do cliente com o campo `consentData` atualizado.
-```json
-  {
-    "_id": "cus_001",
-    "name": "Maria Silva",
-    "cpf": "12345678900",
-    "email": "maria.silva@email.com",
-    "accounts": ["acc_001"],
-    "consentData": true
-  }
-  ```
-
-- **Respostas de Erro:**
-  - **404 Not Found:** Se o `customerId` enviado na URL não for encontrado no banco (`"message": "Usuário não encontrado!"`).
-  - **400 Bad Request:** Se o valor de `consent` não for um booleano (`true` ou `false`).
-
----
-
-### Contas (Accounts)
-
-#### `POST /accounts`
-
-Cria uma nova conta (corrente ou poupança) e a associa a um cliente existente.
-
-- **Corpo da Requisição (Body):**
-```json
-  {
-    "customerId": "cus_001",
-    "type": "checking",
-    "branch": "0001",
-    "number": "12345-6"
-  }
+  "customerId": "cus_001",
+  "type": "checking",
+  "branch": "0001",
+  "number": "12345-6"
+}
   ```
 
 - **Resposta de Sucesso (201 Created):**
 ```json
   {
-    "_id": "acc_001",
-    "type": "checking",
-    "branch": "0001",
-    "number": "12345-6",
-    "balance": 0.00,
-    "transactions": []
-  }
+  "_id": "acc_001",
+  "customer_id": "cus_001",
+  "type": "checking",
+  "branch": "0001",
+  "number": "12345-6",
+  "balance": 0.00,
+  "transactions": []
+}
   ```
 
 - **Respostas de Erro (400/404):**
-  - `customerId` não enviado ou cliente não encontrado (`"message": "Cliente não encontrado"`).
-  - Número de conta duplicado (devido à regra `unique: true`).
+  - customerId não enviado ou cliente não encontrado ("message": "Cliente não encontrado").
 
-#### `GET /accounts/:accountId/balance`
-
-Consulta o saldo de uma conta específica.
-
-- **Parâmetros da URL:**
-  - `accountId` (string): O ID da conta (ex: `acc_001`).
-- **Resposta de Sucesso (200 OK):**
-```json
-  {
-    "balance": 1000.00
-  }
-  ```
-
-- **Respostas de Erro (404 Not Found):**
-  - Conta não encontrada (`"message": "Conta não encontrada"`).
-
----
-
-### Transações (Transactions)
-
-#### `POST /transactions`
+#### `POST /openfinance/transactions`
 
 Registra uma nova transação (crédito/débito) em uma conta. O saldo da conta é atualizado automaticamente.
 
@@ -323,8 +298,155 @@ Registra uma nova transação (crédito/débito) em uma conta. O saldo da conta 
   - Valor negativo ou zero (`"message": "...deve ser maior que R$ 0,00"`).
   - Valor com mais de 2 casas decimais (`"message": "...não é um valor monetário válido"`).
   - Tipo de transação inválido (ex: "transfer").
+  
+---
 
-#### `GET /transactions/:accountId`
+### **Fluxo de Consentimento**
+
+Rotas para gerenciar o consentimento de dados, conforme o padrão Open Finance.
+
+#### `POST /openfinance/consents`
+
+Cria um novo registro de consentimento para um cliente. Este consentimento é auto-autorizado (status: 'AUTHORIZED') para simular o fluxo de autorização.
+
+- **Corpo da Requisição (Body):**
+```json
+  {
+  "customerId": "cus_001",
+  "permissions": [
+    "CUSTOMER_DATA_READ",
+    "ACCOUNTS_READ",
+    "BALANCES_READ",
+    "TRANSACTIONS_READ"
+  ]
+  }
+  ```
+
+- **Resposta de Sucesso (201 Created):**
+```json
+  {
+  "_id": "con_001",
+  "customerId": "cus_001",
+  "status": "AUTHORIZED",
+  "permissions": [
+    "CUSTOMER_DATA_READ",
+    "ACCOUNTS_READ",
+    "BALANCES_READ",
+    "TRANSACTIONS_READ"
+  ],
+  "creationDateTime": "2025-11-05",
+  "expirationDateTime": "2026-11-05"
+}
+  ```
+
+- **Respostas de Erro (400/500):**
+  - Campo obrigatório faltando.
+  - Se uma permissão inválida for enviada (ex: "LER_SALDO"), o enum do Schema falhará.
+
+#### `GET /openfinance/consents/:consentId`
+
+Consulta o status e os detalhes de um registro de consentimento.
+
+- **Parâmetros da URL:**
+  - `consentId` (string): O ID do consentimento (ex: `con_001`).
+- **Resposta de Sucesso (200 OK):**
+```json
+  {
+  "_id": "con_001",
+  "customerId": "cus_001",
+  "status": "AUTHORIZED",
+}
+  ```
+
+#### `DELETE /openfinance/consents/:consentId`
+
+Revoga um consentimento. O status do consentimento é alterado para `REVOKED`.
+
+- **Parâmetros da URL:**
+  - `consentId` (string): O ID do consentimento (ex: `con_001`).
+- **Resposta de Sucesso (204 No Content):**
+  - Retorna uma resposta vazia, indicando que a revogação foi bem-sucedida.
+
+---
+
+### **Rotas Protegidas (Leitura de Dados)**
+
+O acesso a estas rotas é protegido pelo middleware `validateConsent`. Elas só funcionarão se um consentimento válido e ativo existir para o cliente, contendo a permissão granular necessária.
+
+#### `GET /openfinance/customers/:customerId`
+
+Permissão Necessária: `CUSTOMER_DATA_READ`
+
+Busca os dados públicos de um cliente específico.
+
+- **Parâmetros da URL:**
+  - `customerId` (string): O ID da conta (ex: `cus_001`).
+- **Resposta de Sucesso (200 OK):**
+```json
+  {
+  "_id": "cus_001",
+  "name": "Maria Silva",
+  "cpf": "12345678900",
+  "email": "maria.silva@email.com",
+  "accounts": [
+    "acc_001"
+  ]
+}
+  ```
+
+- **Respostas de Erro (403 Forbbiden):**
+  - Se o consentimento não existir, estiver expirado/revogado ou não incluir a permissão `CUSTOMER_DATA_READ`.
+
+#### `GET /openfinance/customers/:customerId/accounts`
+
+Permissão Necessária: `ACCOUNTS_READ`
+
+Lista todas as contas (com seus detalhes) associadas a um cliente.
+  - Resposta de Sucesso (200 OK): Retorna um array de documentos de Conta (via populate).
+
+- **Parâmetros da URL:**
+  - `customerId` (string): O ID da conta (ex: `cus_001`).
+- **Resposta de Sucesso (200 OK):**
+```json
+  [
+  {
+    "_id": "acc_001",
+    "customer_id": "cus_001",
+    "type": "checking",
+    "branch": "0001",
+    "number": "12345-6",
+    "balance": 1000.00,
+    "transactions": ["txn_001"]
+  }
+]
+  ```
+
+- **Respostas de Erro (403 Forbbiden):**
+  - Se o consentimento não incluir a permissão `ACCOUNTS_READ`.
+
+#### `GET /openfinance/accounts/:accountId/balance`
+
+Permissão Necessária: `BALANCES_READ`
+
+Consulta o saldo de uma conta específica.
+
+- **Parâmetros da URL:**
+  - `accountId` (string): O ID da conta (ex: `acc_001`).
+- **Resposta de Sucesso (200 OK):**
+```json
+  {
+  "accountId": "acc_001",
+  "balance": 1000.00
+}
+  ```
+
+- **Respostas de Erro (404 Not Found/ 403 Forbbiden):**
+  - Conta não encontrada.
+  - Se o consentimento não incluir a permissão `BALANCES_READ`.
+
+#### `GET /openfinance/transactions/:accountId`
+
+Permissão Necessária: `TRANSACTIONS_READ`
 
 Lista todas as transações (extrato) de uma conta específica.
 
@@ -333,27 +455,22 @@ Lista todas as transações (extrato) de uma conta específica.
 - **Resposta de Sucesso (200 OK):**
 ```json
   [
-    {
-      "_id": "txn_001",
-      "date": "2025-10-24",
-      "description": "Depósito inicial",
-      "amount": 1000.00,
-      "type": "credit",
-      "category": "Income"
-    },
-    {
-      "_id": "txn_002",
-      "date": "2025-10-24",
-      "description": "Saque",
-      "amount": 200.00,
-      "type": "debit",
-      "category": "Withdrawal"
-    }
-  ]
+  {
+    "_id": "txn_001",
+    "accountId": "acc_001",
+    "date": "2025-11-05",
+    "description": "Depósito inicial",
+    "amount": 1000.00,
+    "type": "credit",
+    "category": "Income"
+  }
+]
   ```
 
-- **Respostas de Erro (404 Not Found):**
-  - Conta não encontrada (`"message": "Conta não encontrada"`).
+- **Respostas de Erro (403 Forbbiden):**
+  - Se o consentimento não incluir a permissão `TRANSACTIONS_READ`.
+  
+---
 
 ## Estrutura de Dados (Models)
 
@@ -362,48 +479,62 @@ As entidades principais seguem a estrutura definida nos requisitos:
 **Cliente (Customer)**
 ```json
   {
-    "_id": "cus_001",
-    "name": "Maria Silva",
-    "cpf": "12345678900",
-    "email": "maria.silva@email.com",
-    "accounts": ["acc_001"],
-    "consentData": false
+  "_id": "cus_001",
+  "name": "Maria Silva",
+  "cpf": "12345678900",
+  "email": "maria.silva@email.com",
+  "accounts": ["acc_001"]
   }
   ```
 
 **Conta (Account)**
 ```json
   {
-    "_id": "acc_001",
-    "type": "checking",
-    "branch": "0001",
-    "number": "12345-6",
-    "balance": 800.00,
-    "transactions": ["txn_001", "txn_002"]
+  "_id": "acc_001",
+  "customer_id": "cus_001",
+  "type": "checking",
+  "branch": "0001",
+  "number": "12345-6",
+  "balance": 1000.00,
+  "transactions": ["txn_001"]
   }
   ```
 
 **Transação (Transaction)**
 ```json
   {
-    "_id": "txn_001",
-    "date": "2025-10-24",
-    "description": "Depósito inicial",
-    "amount": 1000.00,
-    "type": "credit",
-    "category": "Income"
+  "_id": "txn_001",
+  "accountId": "acc_001",
+  "date": "2025-11-05",
+  "description": "Depósito inicial",
+  "amount": 1000.00,
+  "type": "credit",
+  "category": "Income"
+  }
+  ```
+
+**Consentimento (Consent)**
+```json
+  {
+  "_id": "con_001",
+  "customerId": "cus_001",
+  "status": "AUTHORIZED",
+  "permissions": ["BALANCES_READ", "TRANSACTIONS_READ"],
+  "creationDateTime": "2025-11-05T14:30:00.000Z",
+  "expirationDateTime": "2026-11-05T14:30:00.000Z"
   }
   ```
 
 ## Features Principais
 
-- **Geração de IDs Personalizados**: O sistema utiliza uma coleção `counters` no MongoDB para gerar IDs sequenciais e formatados (ex: `cus_001`, `acc_001`, `txn_001`) para cada nova entidade, garantindo conformidade com os requisitos.
+- **Padrão Open Finance**: A API agora expõe rotas (`/openfinance/...`) e um fluxo de consentimento granular, simulando os requisitos de um ecossistema real de compartilhamento de dados.
+- **Segurança Baseada em Permissões:**: O acesso a dados sensíveis é protegido por um middleware de fábrica (`validateConsent`) que verifica se o cliente possui um consentimento ativo, válido e com a permissão específica (ex: `BALANCES_READ`) para a rota solicitada.
+- **Geração de IDs Personalizados**: O sistema utiliza uma coleção `counters` no MongoDB para gerar IDs sequenciais e formatados (ex: `cus_001, acc_001, con_001`).
 - **Validação de Dados Robusta**: A API utiliza validadores do Mongoose para garantir a integridade dos dados, incluindo:
-  - Formato de CPF (exatamente 11 dígitos).
-  - Formato de E-mail.
+  - Formato de CPF (exatamente 11 dígitos) e E-mail.
   - Unicidade de CPF, E-mail e Número da Conta.
-  - Formato monetário (mínimo 0.01 e máximo de 2 casas decimais).
-- **Cálculo de Saldo Atômico**: A lógica de transação (débito/crédito) atualiza o saldo da conta principal na mesma operação, com arredondamento para 2 casas decimais.
+  - Validação das permissões de consentimento (`enum`).
+- **Cálculo de Saldo Atômico**: A lógica de transação (`POST /transactions`) atualiza o saldo da conta principal na mesma operação.
 
 ## Autor
 
