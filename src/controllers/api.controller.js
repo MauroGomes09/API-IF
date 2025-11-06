@@ -281,3 +281,19 @@ export const getConsentById = async (req, res) => {
   }
 };
 
+export const getCustomerByCpf = async (req, res) => {
+  try {
+    const { cpf } = req.params;
+    
+    const customer = await Customer.findOne({ cpf: cpf }); 
+
+    if (!customer) {
+      return res.status(404).json({ error: 'Cliente não encontrado com este CPF.' });
+    }
+    
+    res.status(200).json(customer);
+
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao buscar cliente por CPF", error: error.message });
+  }
+};

@@ -32,4 +32,8 @@ router.get("/accounts/:accountId/balance", validateConsent('BALANCES_READ'), con
 
 router.get("/transactions/:accountId", validateConsent('TRANSACTIONS_READ'), controller.getTransactions);
 
+// Find customerId from the CPF
+
+router.get("/customers/lookup/by-cpf/:cpf", controller.getCustomerByCpf);
+
 export default router;
