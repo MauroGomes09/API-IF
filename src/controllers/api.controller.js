@@ -285,8 +285,7 @@ export const getCustomerByCpf = async (req, res) => {
   try {
     const { cpf } = req.params;
     
-    const customer = await Customer.findOne({ cpf: cpf }); 
-
+    const customer = await Customer.findOne({ cpf: cpf }).select('_id');
     if (!customer) {
       return res.status(404).json({ error: 'Cliente não encontrado com este CPF.' });
     }
