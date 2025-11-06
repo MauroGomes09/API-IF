@@ -285,9 +285,14 @@ export const getCustomerByCpf = async (req, res) => {
   try {
     const { cpf } = req.params;
     
-    const customer = await Customer.findOne({ cpf: cpf }).select('_id');
+    const customer = await Customer.findOne({ cpf: cpf }).select('_id cpf');
     if (!customer) {
       return res.status(404).json({ error: 'Cliente não encontrado com este CPF.' });
+    }
+
+    if (customer.cpf !== cpf) {
+      console.error("ALERTA DE INTEGRIDADE: O CPF encontrado não bate com o CPF buscado.");
+      return res.status(500).json({ error: 'Erro de integridade de dados.' });
     }
     
     res.status(200).json(customer);
