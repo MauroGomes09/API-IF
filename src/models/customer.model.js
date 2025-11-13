@@ -15,6 +15,7 @@ const CustomerSchema = new mongoose.Schema({
     type: String, 
     required: [true, 'O campo CPF é obrigatório'],
     unique: true,
+    set: v => v.replace(/\D/g, ''),
     match: [/^\d{11}$/, 'O CPF deve conter exatamente 11 dígitos numéricos (sem caracteres especiais).'] 
   },
   email: { 
