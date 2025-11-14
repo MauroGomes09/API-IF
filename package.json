@@ -2,7 +2,7 @@
   "name": "api-if",
   "type": "module",
   "version": "1.0.0",
-  "description": "",
+  "description": "![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js) ![Express.js](https://img.shields.io/badge/Express.js-4.x-blue?style=for-the-badge&logo=express) ![MongoDB](https://img.shields.io/badge/MongoDB-6.x-green?style=for-the-badge&logo=mongodb)",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -15,13 +15,21 @@
   "dependencies": {
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "mongoose": "^8.18.1"
+    "mongoose": "^8.19.3"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
     "@babel/preset-env": "^7.28.5",
     "babel-jest": "^30.2.0",
     "jest": "^30.2.0",
-    "nodemon": "^3.1.10"
-  }
+    "nodemon": "^3.1.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MauroGomes09/API-IF.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MauroGomes09/API-IF/issues"
+  },
+  "homepage": "https://github.com/MauroGomes09/API-IF#readme"
 }
