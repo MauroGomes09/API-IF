@@ -17,7 +17,8 @@ const ConsentSchema = new mongoose.Schema({
       'CUSTOMER_DATA_READ', 
       'ACCOUNTS_READ',      
       'BALANCES_READ',      
-      'TRANSACTIONS_READ'   
+      'TRANSACTIONS_READ',
+      'INVESTMENTS_READ'   
     ]
   }],
   creationDateTime: { type: Date, default: Date.now },

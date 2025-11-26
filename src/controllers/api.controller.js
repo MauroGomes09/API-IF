@@ -2,6 +2,8 @@ import Customer from '../models/customer.model.js';
 import Account from '../models/account.model.js';
 import Transaction from '../models/transaction.model.js';
 import Consent from '../models/consent.model.js';
+import Product from '../models/product.model.js';
+import Investment from '../models/investment.model.js';
 
 export const checkStatus = async (req, res) => {
   try { 
@@ -300,4 +302,125 @@ export const getCustomerByCpf = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Erro ao buscar cliente por CPF", error: error.message });
   }
+};
+
+export const getProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ active: true });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao listar produtos.' });
+  }
+};
+
+export const createInvestment = async (req, res) => {
+  try {
+    const { accountId, productId, amount } = req.body;
+
+    if (!accountId || !productId || !amount) {
+       return res.status(400).json({ message: 'accountId, productId e amount são obrigatórios.' });
+    }
+    if (amount <= 0) return res.status(400).json({ message: 'O valor deve ser positivo.' });
+
+    const account = await Account.findById(accountId);
+    if (!account) return res.status(404).json({ message: 'Conta não encontrada.' });
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: 'Produto não encontrado.' });
+
+    if (amount < product.minInvestmentAmount) {
+        return res.status(400).json({ message: `Valor mínimo para este produto é ${product.minInvestmentAmount}` });
+    }
+
+    let currentBalance = Math.round(account.balance * 100) / 100;
+    const investmentAmount = Math.round(amount * 100) / 100;
+
+    if (currentBalance < investmentAmount) {
+        return res.status(400).json({ message: 'Saldo insuficiente para investimento.' });
+    }
+
+    account.balance -= investmentAmount;
+    
+    const newTransaction = new Transaction({
+        accountId: account._id,
+        description: `Investimento em ${product.name}`,
+        amount: investmentAmount,
+        type: 'debit',
+        category: 'Investimento'
+    });
+    
+    const savedTransaction = await newTransaction.save();
+    account.transactions.push(savedTransaction._id);
+    await account.save();
+
+    const newInvestment = new Investment({
+        accountId: accountId,
+        productId: productId,
+        investedAmount: investmentAmount
+    });
+
+    const savedInvestment = await newInvestment.save();
+
+    res.status(201).json({
+        success: true,
+        investment: savedInvestment,
+        transactionId: savedTransaction._id
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const redeemInvestment = async (req, res) => {
+    try {
+        const { investmentId } = req.params;
+        const { amount } = req.body; 
+
+        const investment = await Investment.findById(investmentId);
+        if (!investment) return res.status(404).json({ message: 'Investimento não encontrado.' });
+
+        if (amount > investment.investedAmount) {
+            return res.status(400).json({ message: 'Valor de resgate excede o saldo investido.' });
+        }
+
+        const account = await Account.findById(investment.accountId);
+        if (!account) return res.status(404).json({ message: 'Conta associada não encontrada.' });
+
+        investment.investedAmount -= amount;
+        await investment.save();
+
+        account.balance += amount;
+
+        const newTransaction = new Transaction({
+            accountId: account._id,
+            description: `Resgate de Investimento (${investmentId})`,
+            amount: amount,
+            type: 'credit',
+            category: 'Resgate'
+        });
+
+        const savedTransaction = await newTransaction.save();
+        account.transactions.push(savedTransaction._id);
+        await account.save();
+
+        res.status(200).json({
+            message: 'Resgate realizado com sucesso.',
+            remainingInvested: investment.investedAmount
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getAccountInvestments = async (req, res) => {
+    try {
+        const { accountId } = req.params;
+        const investments = await Investment.find({ accountId }).populate('productId');
+        res.status(200).json(investments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };

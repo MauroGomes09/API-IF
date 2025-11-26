@@ -7,7 +7,8 @@
   "scripts": {
     "test": "jest",
     "dev": "nodemon app.js",
-    "cleanDB": "node cleanDB.js"
+    "cleanDB": "node cleanDB.js",
+    "seed": "node ./scripts/seedProducts.js"
   },
   "keywords": [],
   "author": "",

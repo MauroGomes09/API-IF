@@ -14,6 +14,12 @@ router.post("/accounts", controller.createAccount);
 
 router.post("/transactions", controller.createTransaction);
 
+router.post("/investments", controller.createInvestment);
+
+router.post("/investments/:investmentId/redeem", controller.redeemInvestment);
+
+router.get("/products", controller.getProducts);
+
 // Consent Routes
 
 router.post("/consents", controller.createConsent);
@@ -31,6 +37,8 @@ router.get("/customers/:customerId/accounts", validateConsent('ACCOUNTS_READ'), 
 router.get("/accounts/:accountId/balance", validateConsent('BALANCES_READ'), controller.getBalance);
 
 router.get("/transactions/:accountId", validateConsent('TRANSACTIONS_READ'), controller.getTransactions);
+
+router.get("/investments/accounts/:accountId", validateConsent('INVESTMENTS_READ'), controller.getAccountInvestments)
 
 // Find customerId from the CPF
 
