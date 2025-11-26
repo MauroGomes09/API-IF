@@ -46,7 +46,15 @@ const ProductSchema = new mongoose.Schema({
   indexer: { type: String }, 
   couponRate: { type: Number },
   }, { 
-  timestamps: true 
-}); 
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: function (doc, ret) {
+      delete ret.__v;
+      ret.id = ret._id;
+      ret.productType = ret.type;
+    }
+  }
+});
 
 export default mongoose.model('Product', ProductSchema);
