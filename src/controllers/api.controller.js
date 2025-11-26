@@ -313,9 +313,9 @@ export const getProducts = async (req, res) => {
   }
 };
 
-export const createInvestment = async (req, res) => {
+ export const createInvestment = async (req, res) => {
   try {
-    const { accountId, productId, amount } = req.body;
+    const { accountId, productId, amount, quantity } = req.body;
 
     if (!accountId || !productId || !amount) {
        return res.status(400).json({ message: 'accountId, productId e amount são obrigatórios.' });
@@ -353,10 +353,13 @@ export const createInvestment = async (req, res) => {
     account.transactions.push(savedTransaction._id);
     await account.save();
 
+    const finalQuantity = quantity || 1;
+
     const newInvestment = new Investment({
         accountId: accountId,
         productId: productId,
-        investedAmount: investmentAmount
+        investedAmount: investmentAmount,
+        quantity: finalQuantity 
     });
 
     const savedInvestment = await newInvestment.save();

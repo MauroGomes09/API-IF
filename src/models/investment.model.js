@@ -18,6 +18,11 @@ const InvestmentSchema = new mongoose.Schema({
       required: true, 
       min: 0 
    },
+   quantity: {
+      type: Number,
+      required: true,
+      default: 1 
+   },
    purchaseDate: { 
       type: Date, 
       default: Date.now 
